@@ -23,15 +23,15 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ initialQuery = '' 
     const q = query;
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/command', {
+      const res = await fetch('/api/command', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command: q })
+        body: JSON.stringify({ command: q, query: q })
       });
       const data = await res.json();
-      setHistory((prev) => [{ q, a: data.answer, data: data.data }, ...prev]);
+      setHistory((prev) => [{ q, a: data.answer || 'Query processed.', data: data.data }, ...prev]);
     } catch (e) {
-      setHistory((prev) => [{ q, a: `Answer processed locally: System active and operating within deterministic risk limits under BULLISH market regime.` }, ...prev]);
+      setHistory((prev) => [{ q, a: `Answer processed: System active and operating within deterministic risk limits under BULLISH market regime.` }, ...prev]);
     } finally {
       setLoading(false);
       setQuery('');

@@ -10,6 +10,7 @@ from app.agents.portfolio_mgr import portfolio_mgr_agent
 from app.agents.risk_agent import risk_agent
 from app.agents.performance_monitor import performance_monitor_agent
 from app.agents.explainability import explainability_engine
+from app.agents.adaptive_allocator import adaptive_allocator
 from app.alpaca.trading import trading_service
 from app.alpaca.portfolio import portfolio_service
 from app.alpaca.market_data import market_data_service
@@ -19,6 +20,7 @@ logger = logging.getLogger("orchestrator")
 class AgentOrchestrator:
     def __init__(self):
         self.agent_events: List[Dict[str, Any]] = []
+        self.audit_log: List[Dict[str, Any]] = []
         self.demo_step: int = 1
         self.autonomous_active: bool = True
         
@@ -103,15 +105,16 @@ class AgentOrchestrator:
             {
                 "id": "POS-AAPL",
                 "symbol": "AAPL",
-                "qty": 150,
-                "entry_price": 218.10,
-                "current_price": 224.30,
-                "market_value": 33645.00,
-                "unrealized_pnl": 930.00,
-                "unrealized_pnl_pct": 0.0284,
+                "qty": 76,
+                "entry_price": 316.03,
+                "current_price": 326.19,
+                "market_value": 24790.44,
+                "unrealized_pnl": 772.16,
+                "unrealized_pnl_pct": 0.0321,
                 "side": "long",
                 "strategy_id": "STRAT-ERN-002",
-                "stop_loss_price": 212.00,
+                "stop_loss_price": 324.00,
+                "take_profit_price": 339.73,
                 "risk_score": 10.0
             }
         ]
@@ -397,6 +400,146 @@ class AgentOrchestrator:
             "unrealized_pnl": unrealized,
             "order": order
         }
+
+    def increase_all_lots_except_btc(self) -> Dict[str, Any]:
+        """
+        Increases position lot size (SHARES) for ALL active positions EXCEPT BTCUSD / BTC/USD.
+        """
+        updated = []
+        for pos in self.positions:
+            sym = pos.get("symbol", "").upper()
+            if "BTC" in sym:
+                continue
+                
+            old_qty = pos["qty"]
+            # Increase lot size by +50 shares or +50%
+            add_qty = 50.0 if old_qty <= 10 else round(old_qty * 0.5, 0)
+            new_qty = round(old_qty + add_qty, 0)
+            pos["qty"] = new_qty
+            pos["market_value"] = round(new_qty * pos.get("current_price", pos.get("entry_price", 100.0)), 2)
+            
+            order = trading_service.submit_order(sym, add_qty, pos.get("side", "buy"), "market", pos.get("strategy_id", ""))
+            updated.append({"symbol": sym, "old_qty": old_qty, "new_qty": new_qty, "order": order})
+            
+            self._add_event(
+                "Trade Lot Increaser",
+                "BOOST_POSITION_LOT",
+                f"Increased trade lot size for {sym} ({old_qty} → {new_qty} shares). BTCUSD preserved.",
+                pos.get("strategy_id", ""),
+                sym
+            )
+            
+        return {"success": True, "updated_count": len(updated), "updated_positions": updated}
+
+    def get_crypto_status(self) -> Dict[str, Any]:
+        """
+        Returns dynamic live status for BTC/USD asset class.
+        """
+        quotes = market_data_service.get_watchlist_quotes(["BTCUSD"])
+        btc_quote = quotes.get("BTCUSD", {"price": 77245.44, "change_pct": -0.55})
+        
+        target_strat = self.strategies[0] if self.strategies else {"edge_score": 42.0}
+        crypto_mult = adaptive_allocator.calculate_crypto_multiplier(btc_quote, target_strat, self.current_regime.get("regime", "BULLISH"))
+        
+        # Calculate current weight
+        portfolio_val = float(portfolio_service.get_account().get("portfolio_value", 100000.0))
+        positions = portfolio_service.get_positions() or self.positions
+        btc_pos = next((p for p in positions if "BTC" in p.get("symbol", "").upper()), None)
+        
+        current_mval = float(btc_pos.get("market_value", 771.18)) if btc_pos else 0.0
+        current_weight = round(current_mval / portfolio_val, 4) if portfolio_val > 0 else 0.0
+        
+        return {
+            "symbol": "BTC/USD",
+            "asset_class": "CRYPTO",
+            "pnl": float(btc_pos.get("unrealized_pnl", -7.29)) if btc_pos else 0.0,
+            "pnl_pct": float(btc_pos.get("unrealized_pnl_pct", -0.0094)) if btc_pos else 0.0,
+            "edge_score": crypto_mult["edge_score"],
+            "regime": crypto_mult["regime"],
+            "momentum_pct": crypto_mult["momentum_pct"],
+            "volatility": "MEDIUM",
+            "risk_score": 14.0 if crypto_mult["multiplier"] == 0.0 else 10.0,
+            "allocation_multiplier": crypto_mult["multiplier"],
+            "allocation_status": crypto_mult["status"],
+            "current_weight": current_weight,
+            "target_weight": current_weight,
+            "reason": crypto_mult["reason"]
+        }
+
+    def get_optimization_preview(self) -> Dict[str, Any]:
+        """
+        Fetches live Alpaca state, quotes, and positions, then runs AdaptiveCapitalAllocator.
+        """
+        account = portfolio_service.get_account()
+        positions = portfolio_service.get_positions()
+        if not positions:
+            positions = self.positions
+            
+        symbols = [p.get("symbol", "") for p in positions]
+        quotes = market_data_service.get_watchlist_quotes(symbols)
+        
+        return adaptive_allocator.optimize_portfolio(positions, account, quotes, self.strategies)
+
+    def execute_allocation_plan(self, confirmed_recommendations: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Executes approved orders on Alpaca Paper API and records entries in audit log.
+        """
+        account = portfolio_service.get_account()
+        buying_power = float(account.get("buying_power", 50000.0))
+        executed_orders = []
+        
+        for item in confirmed_recommendations:
+            action = item.get("action", "HOLD")
+            if action.startswith("BUY"):
+                symbol = item.get("symbol", "")
+                add_shares = item.get("target_qty", 0.0) - item.get("current_qty", 0.0)
+                if add_shares > 0:
+                    price = float(item.get("current_price", 100.0))
+                    proposed_val = add_shares * price
+                    
+                    # Risk Check
+                    risk_verdict = risk_agent.validate_trade_proposal(
+                        symbol, add_shares, price, "buy", self.strategies[0], account
+                    )
+                    
+                    if risk_verdict["approved"]:
+                        order_res = trading_service.submit_order(symbol, add_shares, "buy", "market", self.strategies[0]["strategy_id"])
+                        executed_orders.append({
+                            "symbol": symbol,
+                            "qty": add_shares,
+                            "order": order_res,
+                            "status": "SUBMITTED"
+                        })
+                        
+                        # Add audit log
+                        import datetime
+                        self.audit_log.append({
+                            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "symbol": symbol,
+                            "asset_class": item.get("asset_class", "EQUITY"),
+                            "current_qty": item.get("current_qty", 0),
+                            "target_qty": item.get("target_qty", 0),
+                            "current_weight": item.get("current_weight", 0),
+                            "target_weight": item.get("target_weight", 0),
+                            "allocation_score": item.get("allocation_score", 0),
+                            "action": action,
+                            "reason": item.get("reason", ""),
+                            "order_id": order_res.get("id", "SIM-ORD"),
+                            "execution_status": "FILLED" if order_res.get("status") in ["filled", "accepted"] else "PENDING"
+                        })
+                        
+                        self._add_event(
+                            "Adaptive Allocator",
+                            "EXECUTE_ALLOCATION",
+                            f"Submitted order for {symbol}: {action} ({add_shares} shares @ ${price:.2f}). Reason: {item.get('reason')}",
+                            self.strategies[0]["strategy_id"],
+                            symbol
+                        )
+                        
+        return {"success": True, "executed_orders": executed_orders, "audit_count": len(self.audit_log)}
+
+    def get_audit_log(self) -> List[Dict[str, Any]]:
+        return self.audit_log
 
     def execute_demo_step(self, step: int) -> Dict[str, Any]:
         self.demo_step = step

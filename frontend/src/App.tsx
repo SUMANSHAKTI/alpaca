@@ -14,6 +14,7 @@ import { TradeExplorer } from './components/TradeExplorer';
 import { LandingPage } from './components/LandingPage';
 import { LiveTradingChart } from './components/trading/LiveTradingChart';
 import { Watchlist } from './components/Watchlist';
+import { AllocationModal, AllocationPreviewData, AllocationItem } from './components/AllocationModal';
 
 import {
   PortfolioSummaryData,
@@ -136,15 +137,16 @@ export function App() {
     {
       id: 'POS-AAPL',
       symbol: 'AAPL',
-      qty: 35,
-      entry_price: 218.10,
-      current_price: 224.30,
-      market_value: 7850.50,
-      unrealized_pnl: 217.00,
-      unrealized_pnl_pct: 0.0284,
+      qty: 76,
+      entry_price: 316.03,
+      current_price: 326.19,
+      market_value: 24790.44,
+      unrealized_pnl: 772.16,
+      unrealized_pnl_pct: 0.0321,
       side: 'long',
       strategy_id: 'STRAT-ERN-002',
-      stop_loss_price: 212.00,
+      stop_loss_price: 324.00,
+      take_profit_price: 339.73,
       risk_score: 10.0
     }
   ]);
@@ -175,11 +177,42 @@ export function App() {
     { id: 7, timestamp: '14:31', agent_name: 'Market Intelligence Agent', action: 'ANALYZE_REGIME', details: 'Market regime identified as BULLISH (85% confidence)' }
   ]);
 
+  const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState<boolean>(false);
+  const [allocationPreviewData, setAllocationPreviewData] = useState<AllocationPreviewData | null>(null);
+
   const fetchPositions = async () => {
     try {
       const res = await fetch('/api/positions');
       if (res.ok) setPositions(await res.json());
     } catch (e) {}
+  };
+
+  const handleOpenOptimizeModal = async () => {
+    try {
+      const res = await fetch('/api/portfolio/optimize-preview', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setAllocationPreviewData(data);
+        setIsOptimizeModalOpen(true);
+      }
+    } catch (e) {
+      console.error('Error fetching optimization preview:', e);
+    }
+  };
+
+  const handleExecuteAllocation = async (recommendations: AllocationItem[]) => {
+    try {
+      const res = await fetch('/api/portfolio/execute-allocation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recommendations })
+      });
+      if (res.ok) {
+        await fetchPositions();
+      }
+    } catch (e) {
+      console.error('Error executing allocation:', e);
+    }
   };
 
   // Fetch backend data continuously from Alpaca Backend API
@@ -297,7 +330,11 @@ export function App() {
                 />
 
                 {/* Active Positions Table */}
-                <ActivePositionsTable positions={positions} onRefresh={fetchPositions} />
+                <ActivePositionsTable
+                  positions={positions}
+                  onRefresh={fetchPositions}
+                  onOpenOptimizeModal={handleOpenOptimizeModal}
+                />
               </div>
             )}
 
@@ -354,6 +391,13 @@ export function App() {
       <ExplainabilityModal
         trade={selectedTrade}
         onClose={() => setSelectedTrade(null)}
+      />
+
+      <AllocationModal
+        isOpen={isOptimizeModalOpen}
+        onClose={() => setIsOptimizeModalOpen(false)}
+        previewData={allocationPreviewData}
+        onConfirmExecute={handleExecuteAllocation}
       />
     </div>
   );
