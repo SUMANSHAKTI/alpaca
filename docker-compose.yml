@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  alpha-hunter-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY}
+      - ALPACA_BASE_URL=https://paper-api.alpaca.markets
+      - DEMO_MODE=true
+      - LLM_PROVIDER=mock
+    volumes:
+      - ./backend/alpha_hunter.db:/app/backend/alpha_hunter.db
