@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, ShieldAlert, PieChart, RefreshCw } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Cell } from 'recharts';
+import { getApiUrl } from '../config';
 
 export const PnLAnalytics: React.FC = () => {
   const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | 'ALL'>('1D');
@@ -35,7 +36,7 @@ export const PnLAnalytics: React.FC = () => {
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/portfolio/history?timeframe=${timeframe}`);
+        const res = await fetch(getApiUrl(`/portfolio/history?timeframe=${timeframe}`));
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.equity_curve) && data.equity_curve.length > 0) {

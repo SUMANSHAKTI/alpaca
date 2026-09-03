@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Terminal, Send, Cpu, ShieldCheck, Zap, BarChart2, CheckCircle2 } from 'lucide-react';
+import { Terminal, Send } from 'lucide-react';
+import { getApiUrl } from '../config';
 
 interface CommandCenterProps {
   initialQuery?: string;
@@ -30,7 +31,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ initialQuery = '' 
     const q = cmdText.trim();
     setLoading(true);
     try {
-      const res = await fetch('/api/command', {
+      const res = await fetch(getApiUrl('/command'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command: q, query: q })

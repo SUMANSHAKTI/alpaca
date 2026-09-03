@@ -15,6 +15,7 @@ import { LandingPage } from './components/LandingPage';
 import { LiveTradingChart } from './components/trading/LiveTradingChart';
 import { Watchlist } from './components/Watchlist';
 import { AllocationModal, AllocationPreviewData, AllocationItem } from './components/AllocationModal';
+import { getApiUrl } from './config';
 
 import {
   PortfolioSummaryData,
@@ -43,20 +44,12 @@ export function App() {
   const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState<boolean>(false);
   const [allocationPreviewData, setAllocationPreviewData] = useState<AllocationPreviewData | null>(null);
 
-  const getApiUrl = (path: string) => {
-    const host = typeof window !== 'undefined' ? (window.location.hostname || '127.0.0.1') : '127.0.0.1';
-    return `http://${host}:8000/api${path}`;
-  };
-
   const fetchPositions = async () => {
     try {
       const res = await fetch(getApiUrl('/positions'));
       if (res.ok) setPositions(await res.json());
     } catch (e) {
-      try {
-        const res = await fetch('/api/positions');
-        if (res.ok) setPositions(await res.json());
-      } catch (err) {}
+      console.error('Error fetching positions:', e);
     }
   };
 
@@ -130,7 +123,7 @@ export function App() {
   const handleRunDiscovery = async () => {
     setIsDiscovering(true);
     try {
-      const res = await fetch('/api/discovery/run', { method: 'POST' });
+      const res = await fetch(getApiUrl('/discovery/run'), { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         if (data.result?.strategy) {
@@ -150,7 +143,7 @@ export function App() {
     const nextState = !autonomousActive;
     setAutonomousActive(nextState);
     try {
-      await fetch('/api/autonomous/toggle', {
+      await fetch(getApiUrl('/autonomous/toggle'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: nextState })

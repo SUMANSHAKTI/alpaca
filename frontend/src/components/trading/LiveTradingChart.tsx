@@ -3,6 +3,7 @@ import { createChart, CandlestickSeries, HistogramSeries, LineSeries, createSeri
 import { Maximize2, Minimize2, Radio, Play, Pause, ShieldCheck, Zap, Activity, RefreshCw, BarChart2 } from 'lucide-react';
 import { AICouncilPanel } from './AICouncilPanel';
 import { TradeDetailModal, TradeMarkerData } from './TradeDetailModal';
+import { getApiUrl, getWsUrl } from '../../config';
 
 export interface LiveTradingChartProps {
   symbol?: string;
@@ -65,8 +66,7 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
 
     const fetchPosition = async () => {
       try {
-        const host = window.location.hostname || '127.0.0.1';
-        const res = await fetch(`http://${host}:8000/api/positions?symbol=${encodeURIComponent(symbol)}`);
+        const res = await fetch(getApiUrl(`/positions?symbol=${encodeURIComponent(symbol)}`));
         if (res.ok) {
           const data = await res.json();
           if (isSubscribed) {
@@ -186,8 +186,7 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
         if (maSeriesRef.current) maSeriesRef.current.setData([]);
         if (emaSeriesRef.current) emaSeriesRef.current.setData([]);
 
-        const host = window.location.hostname || '127.0.0.1';
-        const res = await fetch(`http://${host}:8000/api/market-data/bars?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}&limit=200`);
+        const res = await fetch(getApiUrl(`/market-data/bars?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}&limit=200`));
         const bars = await res.json();
 
         if (isSubscribed && candleSeriesRef.current && Array.isArray(bars) && bars.length > 0) {
@@ -243,7 +242,7 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
         }
 
         // Fetch AI Trades for Symbol
-        const tradesRes = await fetch(`http://${host}:8000/api/market-data/trades?symbol=${encodeURIComponent(symbol)}`);
+        const tradesRes = await fetch(getApiUrl(`/market-data/trades?symbol=${encodeURIComponent(symbol)}`));
         const tradeData: TradeMarkerData[] = await tradesRes.json();
 
         if (isSubscribed) {
@@ -266,8 +265,7 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
   useEffect(() => {
     if (demoMode) return;
 
-    const host = window.location.hostname || '127.0.0.1';
-    const wsUrl = `ws://${host}:8000/api/market-data/ws/${encodeURIComponent(symbol)}`;
+    const wsUrl = getWsUrl(`/market-data/ws/${encodeURIComponent(symbol)}`);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

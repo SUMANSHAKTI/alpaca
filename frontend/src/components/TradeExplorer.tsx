@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ChevronRight } from 'lucide-react';
 import { Trade } from '../types';
+import { getApiUrl } from '../config';
 
 interface TradeExplorerProps {
   trades: Trade[];
@@ -15,11 +16,10 @@ export const TradeExplorer: React.FC<TradeExplorerProps> = ({ trades, onSelectTr
 
     const fetchQuotes = async () => {
       try {
-        const host = window.location.hostname || '127.0.0.1';
         const symbols = Array.from(new Set(trades.map(t => t.symbol))).join(',');
         if (!symbols) return;
 
-        const res = await fetch(`http://${host}:8000/api/market-data/watchlist?symbols=${encodeURIComponent(symbols)}`);
+        const res = await fetch(getApiUrl(`/market-data/watchlist?symbols=${encodeURIComponent(symbols)}`));
         if (res.ok) {
           const data = await res.json();
           if (isSubscribed && Array.isArray(data)) {

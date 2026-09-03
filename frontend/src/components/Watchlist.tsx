@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Plus, Trash2, Search, Activity } from 'lucide-react';
+import { getApiUrl } from '../config';
 
 export interface WatchlistItem {
   symbol: string;
@@ -37,8 +38,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({ selectedSymbol, onSelectSy
     let isSubscribed = true;
     const fetchWatchlist = async () => {
       try {
-        const host = window.location.hostname || '127.0.0.1';
-        const res = await fetch(`http://${host}:8000/api/market-data/watchlist?symbols=${encodeURIComponent(symbolsQuery)}`);
+        const res = await fetch(getApiUrl(`/market-data/watchlist?symbols=${encodeURIComponent(symbolsQuery)}`));
         if (res.ok) {
           const data = await res.json();
           if (isSubscribed && Array.isArray(data) && data.length > 0) {

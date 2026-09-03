@@ -1,0 +1,42 @@
+services:
+  # 1. FastAPI Backend Web Service
+  - type: web
+    name: alpha-hunter-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEMO_MODE
+        value: "false"
+      - key: LLM_PROVIDER
+        value: mock
+      - key: ALPACA_BASE_URL
+        value: https://paper-api.alpaca.markets/v2
+      - key: DATABASE_URL
+        value: sqlite:///./alpha_hunter.db
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+
+  # 2. React Frontend Static Site
+  - type: web
+    name: alpha-hunter-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: alpha-hunter-backend
+          property: host
