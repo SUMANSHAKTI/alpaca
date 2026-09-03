@@ -10,8 +10,8 @@ services:
     environment:
       - ALPACA_API_KEY=${ALPACA_API_KEY}
       - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY}
-      - ALPACA_BASE_URL=https://paper-api.alpaca.markets
-      - DEMO_MODE=true
+      - ALPACA_BASE_URL=https://paper-api.alpaca.markets/v2
+      - DEMO_MODE=${DEMO_MODE:-false}
       - LLM_PROVIDER=mock
     volumes:
       - ./backend/alpha_hunter.db:/app/backend/alpha_hunter.db

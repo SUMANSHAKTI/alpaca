@@ -293,47 +293,38 @@ def process_command_query(payload: Dict[str, Any]):
             found_symbol = "AAPL" if s == "AAPL" else ("BTCUSD" if "btc" in s.lower() else s)
             break
     
-    # 1. Dynamic Take Profit Modification
+    # 1. Take Profit Query / Instruction
     if "take profit" in q or "tp " in q or "target" in q:
         sym = found_symbol or "AAPL"
-        if numbers:
-            target_val = numbers[0]
-            portfolio_service.update_position_override(sym, take_profit_price=target_val)
-            for p in agent_orchestrator.positions:
-                if p["symbol"].upper() == sym:
-                    p["take_profit_price"] = target_val
-            return {
-                "answer": f"✅ Command Executed: Updated {sym} Take Profit target to ${target_val:,.2f}.",
-                "data": {"symbol": sym, "take_profit_price": target_val, "status": "UPDATED"}
-            }
+        positions = portfolio_service.get_positions()
+        pos = next((p for p in positions if p["symbol"].upper() in (sym, sym.replace("/", ""))), None)
+        tp_str = f"${pos['take_profit_price']:.2f}" if pos and pos.get("take_profit_price") else "NOT SET"
+        return {
+            "answer": f"Alpaca Source of Truth: {sym} active Take Profit order is {tp_str}.",
+            "data": {"symbol": sym, "take_profit": pos.get("take_profit_price") if pos else None, "source": "ALPACA"}
+        }
 
-    # 2. Dynamic Stop Loss Modification / Trailing Stop
+    # 2. Stop Loss Query / Instruction
     if "stop loss" in q or "stoploss" in q or "trail" in q or "sl " in q:
         sym = found_symbol or "AAPL"
-        if numbers:
-            stop_val = numbers[0]
-            portfolio_service.update_position_override(sym, stop_loss_price=stop_val)
-            for p in agent_orchestrator.positions:
-                if p["symbol"].upper() == sym:
-                    p["stop_loss_price"] = stop_val
-            return {
-                "answer": f"✅ Command Executed: Updated {sym} Stop Loss to ${stop_val:,.2f}.",
-                "data": {"symbol": sym, "stop_loss_price": stop_val, "status": "UPDATED"}
-            }
+        positions = portfolio_service.get_positions()
+        pos = next((p for p in positions if p["symbol"].upper() in (sym, sym.replace("/", ""))), None)
+        sl_str = f"${pos['stop_loss_price']:.2f}" if pos and pos.get("stop_loss_price") else "NOT SET"
+        return {
+            "answer": f"Alpaca Source of Truth: {sym} active Stop Loss order is {sl_str}.",
+            "data": {"symbol": sym, "stop_loss": pos.get("stop_loss_price") if pos else None, "source": "ALPACA"}
+        }
 
-    # 3. Dynamic Share Quantity / Lot Modification
+    # 3. Share Quantity / Lot Query
     if "quantity" in q or "shares" in q or "share" in q or "lot" in q or "qty" in q:
         sym = found_symbol or "AAPL"
-        if numbers:
-            qty_val = float(numbers[0])
-            portfolio_service.update_position_override(sym, qty=qty_val)
-            for p in agent_orchestrator.positions:
-                if p["symbol"].upper() == sym:
-                    p["qty"] = qty_val
-            return {
-                "answer": f"✅ Command Executed: Updated {sym} Quantity to {qty_val:g} shares.",
-                "data": {"symbol": sym, "qty": qty_val, "status": "UPDATED"}
-            }
+        positions = portfolio_service.get_positions()
+        pos = next((p for p in positions if p["symbol"].upper() in (sym, sym.replace("/", ""))), None)
+        qty_val = pos.get("qty", 0) if pos else 0
+        return {
+            "answer": f"Alpaca Source of Truth: {sym} live position quantity is {qty_val} shares/units.",
+            "data": {"symbol": sym, "qty": qty_val, "source": "ALPACA"}
+        }
 
     # 4. Trade execution commands (e.g. "buy 10 nvda", "trade 5 aapl")
     if q.startswith("buy ") or q.startswith("trade ") or q.startswith("paper trade "):
@@ -358,43 +349,38 @@ def process_command_query(payload: Dict[str, Any]):
     # 5. System Status & Exposure
     if "status" in q or "system" in q:
         account = portfolio_service.get_account()
-        positions = portfolio_service.get_positions() or agent_orchestrator.positions
+        positions = portfolio_service.get_positions()
         return {
-            "answer": f"System Status: ALPHA HUNTER Autonomous AI Engine is ACTIVE. Alpaca Paper API connected (Account: {account.get('account_number', 'PA3YQ39TT15W')}). Total Portfolio Value: ${float(account.get('portfolio_value', 100000)):,.2f} with ${float(account.get('buying_power', 50000)):,.2f} buying power across {len(positions)} active positions.",
+            "answer": f"System Status: ALPHA HUNTER Autonomous AI Engine is ACTIVE. Alpaca Paper API connected (Account: {account.get('account_number', 'PAPER')}). Total Portfolio Value: ${float(account.get('portfolio_value', 0)):,.2f} with ${float(account.get('buying_power', 0)):,.2f} buying power across {len(positions)} active live Alpaca positions.",
             "data": {"account": account, "active_positions_count": len(positions), "autonomous_active": getattr(agent_orchestrator, "autonomous_active", True)}
         }
 
     # 6. Active Positions
     if "position" in q or "exposure" in q or "holding" in q:
-        positions = portfolio_service.get_positions() or agent_orchestrator.positions
-        summary_str = ", ".join([f"{p.get('symbol')}: {p.get('qty')} shares (${p.get('market_value', 0):,.2f})" for p in positions])
+        positions = portfolio_service.get_positions()
+        summary_str = ", ".join([f"{p.get('symbol')}: {p.get('qty')} shares (${p.get('market_value', 0):,.2f})" for p in positions]) if positions else "No active positions."
         return {
-            "answer": f"Active Portfolio Exposure ({len(positions)} positions): {summary_str}.",
+            "answer": f"Active Portfolio Exposure ({len(positions)} live Alpaca positions): {summary_str}.",
             "data": positions
         }
 
     # 7. Specific Symbol queries
-    if "aapl" in q:
+    if "aapl" in q or "nvda" in q or "btc" in q:
         positions = portfolio_service.get_positions()
-        aapl_pos = next((p for p in positions if p["symbol"] == "AAPL"), None)
-        tp = aapl_pos.get("take_profit_price", 350.13) if aapl_pos else 350.13
-        sl = aapl_pos.get("stop_loss_price", 324.00) if aapl_pos else 324.00
-        qty = aapl_pos.get("qty", 76) if aapl_pos else 76
-        return {
-            "answer": f"AAPL Exposure: {qty} shares (stop loss ${sl:,.2f}, take profit target ${tp:,.2f}). Position is long under strategy STRAT-ERN-002.",
-            "data": {"symbol": "AAPL", "qty": qty, "stop_loss": sl, "take_profit": tp}
-        }
-    elif "nvda" in q:
-        trade = next((t for t in agent_orchestrator.trades if t["symbol"] == "NVDA"), agent_orchestrator.trades[0])
-        return {
-            "answer": "NVDA Exposure: 250 shares @ $219.40 entry ($56,287.50 market value). Strategy 'Regime Momentum v3' detected strong positive momentum (+4.98%) in a BULLISH regime with 86/100 robustness.",
-            "data": trade.get("explainability")
-        }
-    elif "btc" in q or "crypto" in q:
-        return {
-            "answer": "BTC/USD Allocation Status: PAUSED (Multiplier: 0.0x). Existing 0.009975 BTC position is actively monitored by Risk Agent; no new capital allocation recommended.",
-            "data": agent_orchestrator.get_crypto_status()
-        }
+        target_sym = "AAPL" if "aapl" in q else ("NVDA" if "nvda" in q else "BTCUSD")
+        pos = next((p for p in positions if p["symbol"].upper() in (target_sym, "BTC/USD")), None)
+        if pos:
+            sl_str = f"${pos['stop_loss_price']:.2f}" if pos.get("stop_loss_price") else "NOT SET"
+            tp_str = f"${pos['take_profit_price']:.2f}" if pos.get("take_profit_price") else "NOT SET"
+            return {
+                "answer": f"{pos['symbol']} Exposure (ALPACA LIVE): {pos['qty']} shares/units @ ${pos['entry_price']:.2f} entry (${pos['market_value']:,.2f} market value, P&L ${pos['unrealized_pnl']:,.2f}). Stop loss: {sl_str}, Take profit: {tp_str}.",
+                "data": pos
+            }
+        else:
+            return {
+                "answer": f"No active live position for {target_sym} in current Alpaca account.",
+                "data": {"symbol": target_sym, "status": "NO_POSITION"}
+            }
 
     # 8. Risk Report & Guardrails
     elif "risk" in q or "guardrail" in q or "limit" in q:

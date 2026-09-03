@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 # Load environment variables from workspace root .env file
@@ -8,6 +9,8 @@ env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env", extra="allow")
+
     APP_NAME: str = "ALPHA HUNTER — Autonomous AI Trading Scientist"
     ALPACA_API_KEY: str = os.getenv("ALPACA_API_KEY", "")
     ALPACA_SECRET_KEY: str = os.getenv("ALPACA_SECRET_KEY", "")
@@ -32,8 +35,5 @@ class Settings(BaseSettings):
     MAX_PORTFOLIO_DRAWDOWN_PCT: float = 0.15
     MAX_SECTOR_EXPOSURE_PCT: float = 0.40
 
-    class Config:
-        env_file = ".env"
-        extra = "allow"
-
 settings = Settings()
+

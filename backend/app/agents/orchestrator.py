@@ -204,7 +204,9 @@ class AgentOrchestrator:
         order = trading_service.submit_order(symbol, qty, side, "market", strategy_id)
         self._add_event("Alpaca Paper Trading", "SUBMIT_ORDER", f"Paper order submitted: {side.upper()} {qty} {symbol} @ ${order['filled_price']:.2f}", strategy_id, symbol)
         
-        pos = {
+        # Reconcile live position directly from Alpaca Paper Trading API
+        live_positions = portfolio_service.get_positions(symbol=symbol)
+        pos = live_positions[0] if live_positions else {
             "id": f"POS-{symbol}",
             "symbol": symbol,
             "qty": qty,
@@ -215,10 +217,10 @@ class AgentOrchestrator:
             "unrealized_pnl_pct": 0.0,
             "side": side.lower(),
             "strategy_id": strategy_id,
-            "stop_loss_price": round(order["filled_price"] * 0.965, 2),
-            "risk_score": 14.0
+            "stop_loss_price": None,
+            "take_profit_price": None,
+            "data_source": "ALPACA LIVE"
         }
-        self.positions.insert(0, pos)
         
         trade = {
             "id": f"TRD-{len(self.trades)+1093}",

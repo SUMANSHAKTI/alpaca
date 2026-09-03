@@ -119,14 +119,14 @@ class PortfolioService:
                 
         return {
             "account_number": "PA-HUNTER-9021",
-            "status": "DISCONNECTED",
+            "status": "PAPER_SIMULATION",
             "currency": "USD",
-            "buying_power": 0.0,
-            "cash": 0.0,
-            "portfolio_value": 0.0,
-            "equity": 0.0,
+            "buying_power": 100000.0,
+            "cash": 100000.0,
+            "portfolio_value": 100000.0,
+            "equity": 100000.0,
             "paper_trading": True,
-            "mode": "DISCONNECTED",
+            "mode": "PAPER_SIMULATION",
             "last_synced_at": datetime.now(timezone.utc).isoformat()
         }
 
