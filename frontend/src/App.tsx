@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Header } from './components/Header';
 import { PortfolioSummary } from './components/PortfolioSummary';
 import { MarketRegimeCard } from './components/MarketRegimeCard';
@@ -12,9 +13,24 @@ import { CommandCenter } from './components/CommandCenter';
 import { PnLAnalytics } from './components/PnLAnalytics';
 import { TradeExplorer } from './components/TradeExplorer';
 import { LandingPage } from './components/LandingPage';
+
+/*
+ * Dashboard now uses PortfolioPerformance instead of the
+ * heavy historical TradingView market-data chart.
+ *
+ * The detailed LiveTradingChart is still available from
+ * the dedicated Chart tab below.
+ */
+import { PortfolioPerformance } from './components/PortfolioPerformance';
 import { LiveTradingChart } from './components/trading/LiveTradingChart';
+
 import { Watchlist } from './components/Watchlist';
-import { AllocationModal, AllocationPreviewData, AllocationItem } from './components/AllocationModal';
+import {
+  AllocationModal,
+  AllocationPreviewData,
+  AllocationItem
+} from './components/AllocationModal';
+
 import { getApiUrl } from './config';
 
 import {
@@ -27,135 +43,387 @@ import {
 } from './types';
 
 export function App() {
+  // ------------------------------------------------------------
+  // Navigation
+  // ------------------------------------------------------------
+
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  // ------------------------------------------------------------
+  // Strategy / Trade state
+  // ------------------------------------------------------------
+
   const [isDiscovering, setIsDiscovering] = useState<boolean>(false);
-  const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
-  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
-  const [activeSymbol, setActiveSymbol] = useState<string>('NVDA');
 
-  // Real-Time Backend Data States
-  const [portfolio, setPortfolio] = useState<PortfolioSummaryData | null>(null);
-  const [marketRegime, setMarketRegime] = useState<MarketRegime | null>(null);
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [positions, setPositions] = useState<Position[]>([]);
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [agentEvents, setAgentEvents] = useState<AgentEvent[]>([]);
+  const [selectedStrategy, setSelectedStrategy] =
+    useState<Strategy | null>(null);
 
-  const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState<boolean>(false);
-  const [allocationPreviewData, setAllocationPreviewData] = useState<AllocationPreviewData | null>(null);
+  const [selectedTrade, setSelectedTrade] =
+    useState<Trade | null>(null);
+
+  // ------------------------------------------------------------
+  // Market state
+  // ------------------------------------------------------------
+
+  const [activeSymbol, setActiveSymbol] =
+    useState<string>('NVDA');
+
+  // ------------------------------------------------------------
+  // Real-time backend data
+  // ------------------------------------------------------------
+
+  const [portfolio, setPortfolio] =
+    useState<PortfolioSummaryData | null>(null);
+
+  const [marketRegime, setMarketRegime] =
+    useState<MarketRegime | null>(null);
+
+  const [strategies, setStrategies] =
+    useState<Strategy[]>([]);
+
+  const [positions, setPositions] =
+    useState<Position[]>([]);
+
+  const [trades, setTrades] =
+    useState<Trade[]>([]);
+
+  const [agentEvents, setAgentEvents] =
+    useState<AgentEvent[]>([]);
+
+  // ------------------------------------------------------------
+  // Allocation modal
+  // ------------------------------------------------------------
+
+  const [isOptimizeModalOpen, setIsOptimizeModalOpen] =
+    useState<boolean>(false);
+
+  const [allocationPreviewData, setAllocationPreviewData] =
+    useState<AllocationPreviewData | null>(null);
+
+  // ------------------------------------------------------------
+  // Fetch current positions
+  // ------------------------------------------------------------
 
   const fetchPositions = async () => {
     try {
       const res = await fetch(getApiUrl('/positions'));
-      if (res.ok) setPositions(await res.json());
-    } catch (e) {
-      console.error('Error fetching positions:', e);
+
+      if (res.ok) {
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setPositions(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching positions:', error);
     }
   };
+
+  // ------------------------------------------------------------
+  // Open portfolio optimization modal
+  // ------------------------------------------------------------
 
   const handleOpenOptimizeModal = async () => {
     try {
-      let res = await fetch(getApiUrl('/portfolio/optimize-preview'), { method: 'POST' });
+      let res = await fetch(
+        getApiUrl('/portfolio/optimize-preview'),
+        {
+          method: 'POST'
+        }
+      );
+
+      /*
+       * Keep local /api fallback for development environments.
+       */
       if (!res.ok) {
-        res = await fetch('/api/portfolio/optimize-preview', { method: 'POST' });
+        res = await fetch(
+          '/api/portfolio/optimize-preview',
+          {
+            method: 'POST'
+          }
+        );
       }
+
       if (res.ok) {
         const data = await res.json();
+
         setAllocationPreviewData(data);
         setIsOptimizeModalOpen(true);
       }
-    } catch (e) {
-      console.error('Error fetching optimization preview:', e);
+    } catch (error) {
+      console.error(
+        'Error fetching optimization preview:',
+        error
+      );
     }
   };
 
-  const handleExecuteAllocation = async (recommendations: AllocationItem[]) => {
+  // ------------------------------------------------------------
+  // Execute portfolio allocation
+  // ------------------------------------------------------------
+
+  const handleExecuteAllocation = async (
+    recommendations: AllocationItem[]
+  ) => {
     try {
-      let res = await fetch(getApiUrl('/portfolio/execute-allocation'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recommendations })
-      });
-      if (!res.ok) {
-        res = await fetch('/api/portfolio/execute-allocation', {
+      let res = await fetch(
+        getApiUrl('/portfolio/execute-allocation'),
+        {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ recommendations })
-        });
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            recommendations
+          })
+        }
+      );
+
+      /*
+       * Keep local /api fallback for development environments.
+       */
+      if (!res.ok) {
+        res = await fetch(
+          '/api/portfolio/execute-allocation',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              recommendations
+            })
+          }
+        );
       }
+
       if (res.ok) {
         await fetchPositions();
       }
-    } catch (e) {
-      console.error('Error executing allocation:', e);
+    } catch (error) {
+      console.error(
+        'Error executing allocation:',
+        error
+      );
     }
   };
 
-  // Fetch real backend data continuously from Alpaca Backend API
+  // ------------------------------------------------------------
+  // Fetch backend data
+  // ------------------------------------------------------------
+
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
-        const [portRes, regRes, stratRes, posRes, ordRes, evtRes] = await Promise.all([
-          fetch(getApiUrl('/portfolio')).catch(() => fetch('/api/portfolio')),
-          fetch(getApiUrl('/market-regime')).catch(() => fetch('/api/market-regime')),
-          fetch(getApiUrl('/strategies')).catch(() => fetch('/api/strategies')),
-          fetch(getApiUrl('/positions')).catch(() => fetch('/api/positions')),
-          fetch(getApiUrl('/orders')).catch(() => fetch('/api/orders')),
-          fetch(getApiUrl('/agent-events')).catch(() => fetch('/api/agent-events'))
+        /*
+         * Fetch the dashboard's main backend data in parallel.
+         *
+         * IMPORTANT:
+         * Portfolio performance is NOT fetched here.
+         * PortfolioPerformance handles its own history request.
+         *
+         * The heavy historical market-bars request is therefore
+         * no longer part of the main dashboard load.
+         */
+
+        const [
+          portRes,
+          regRes,
+          stratRes,
+          posRes,
+          ordRes,
+          evtRes
+        ] = await Promise.all([
+          fetch(getApiUrl('/portfolio')).catch(() =>
+            fetch('/api/portfolio')
+          ),
+
+          fetch(getApiUrl('/market-regime')).catch(() =>
+            fetch('/api/market-regime')
+          ),
+
+          fetch(getApiUrl('/strategies')).catch(() =>
+            fetch('/api/strategies')
+          ),
+
+          fetch(getApiUrl('/positions')).catch(() =>
+            fetch('/api/positions')
+          ),
+
+          fetch(getApiUrl('/orders')).catch(() =>
+            fetch('/api/orders')
+          ),
+
+          fetch(getApiUrl('/agent-events')).catch(() =>
+            fetch('/api/agent-events')
+          )
         ]);
 
-        if (portRes && portRes.ok) setPortfolio(await portRes.json());
-        if (regRes && regRes.ok) setMarketRegime(await regRes.json());
-        if (stratRes && stratRes.ok) setStrategies(await stratRes.json());
-        if (posRes && posRes.ok) setPositions(await posRes.json());
-        if (ordRes && ordRes.ok) setTrades(await ordRes.json());
-        if (evtRes && evtRes.ok) setAgentEvents(await evtRes.json());
-      } catch (e) {
-        console.error('Error fetching real-time data from backend:', e);
+        if (!isMounted) return;
+
+        if (portRes.ok) {
+          const data = await portRes.json();
+          setPortfolio(data);
+        }
+
+        if (regRes.ok) {
+          const data = await regRes.json();
+          setMarketRegime(data);
+        }
+
+        if (stratRes.ok) {
+          const data = await stratRes.json();
+
+          if (Array.isArray(data)) {
+            setStrategies(data);
+          }
+        }
+
+        if (posRes.ok) {
+          const data = await posRes.json();
+
+          if (Array.isArray(data)) {
+            setPositions(data);
+          }
+        }
+
+        if (ordRes.ok) {
+          const data = await ordRes.json();
+
+          if (Array.isArray(data)) {
+            setTrades(data);
+          }
+        }
+
+        if (evtRes.ok) {
+          const data = await evtRes.json();
+
+          if (Array.isArray(data)) {
+            setAgentEvents(data);
+          }
+        }
+      } catch (error) {
+        console.error(
+          'Error fetching real-time data from backend:',
+          error
+        );
       }
     };
 
+    /*
+     * Initial load.
+     */
     fetchData();
-    const interval = setInterval(fetchData, 3000);
-    return () => clearInterval(interval);
+
+    /*
+     * Keep dashboard data fresh.
+     *
+     * 5 seconds is sufficient for the dashboard and avoids
+     * excessive requests compared with the previous 3-second
+     * polling interval.
+     */
+    const interval = setInterval(fetchData, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
+
+  // ------------------------------------------------------------
+  // AI Strategy Discovery
+  // ------------------------------------------------------------
 
   const handleRunDiscovery = async () => {
     setIsDiscovering(true);
+
     try {
-      const res = await fetch(getApiUrl('/discovery/run'), { method: 'POST' });
+      const res = await fetch(
+        getApiUrl('/discovery/run'),
+        {
+          method: 'POST'
+        }
+      );
+
       if (res.ok) {
         const data = await res.json();
+
         if (data.result?.strategy) {
-          setStrategies((prev) => [data.result.strategy, ...prev]);
+          setStrategies((previous) => [
+            data.result.strategy,
+            ...previous
+          ]);
         }
       }
-    } catch (e) {
-      // Error handling
+    } catch (error) {
+      console.error(
+        'Error running strategy discovery:',
+        error
+      );
     } finally {
       setIsDiscovering(false);
     }
   };
 
-  const [autonomousActive, setAutonomousActive] = useState(true);
+  // ------------------------------------------------------------
+  // Autonomous trading state
+  // ------------------------------------------------------------
+
+  const [autonomousActive, setAutonomousActive] =
+    useState<boolean>(true);
+
+  // ------------------------------------------------------------
+  // Toggle autonomous trading
+  // ------------------------------------------------------------
 
   const handleToggleAutonomous = async () => {
     const nextState = !autonomousActive;
+
+    /*
+     * Optimistic UI update.
+     */
     setAutonomousActive(nextState);
+
     try {
-      await fetch(getApiUrl('/autonomous/toggle'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: nextState })
-      });
-    } catch (e) {
-      // Retain optimistic UI state
+      await fetch(
+        getApiUrl('/autonomous/toggle'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            enabled: nextState
+          })
+        }
+      );
+    } catch (error) {
+      console.error(
+        'Error toggling autonomous trading:',
+        error
+      );
+
+      /*
+       * Keep optimistic state as the existing application
+       * behavior does.
+       */
     }
   };
 
+  // ------------------------------------------------------------
+  // Render
+  // ------------------------------------------------------------
+
   return (
     <div className="min-h-screen bg-[#090B0E] text-slate-100 font-sans pb-12">
-      {/* Header */}
+
+      {/* ======================================================
+          HEADER
+      ======================================================= */}
+
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -165,136 +433,228 @@ export function App() {
         onToggleAutonomous={handleToggleAutonomous}
       />
 
-      {/* Main Container */}
+      {/* ======================================================
+          MAIN CONTAINER
+      ======================================================= */}
+
       <main className="max-w-[1700px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        
-        {/* Landing Page View */}
+
+        {/* ====================================================
+            LANDING PAGE
+        ===================================================== */}
+
         {activeTab === 'landing' ? (
           <LandingPage
-            onEnterLab={() => setActiveTab('dashboard')}
-            onViewStrategies={() => setActiveTab('strategies')}
+            onEnterLab={() =>
+              setActiveTab('dashboard')
+            }
+            onViewStrategies={() =>
+              setActiveTab('strategies')
+            }
           />
         ) : (
           <>
-            {/* Top Portfolio KPI Strip */}
+            {/* ==================================================
+                TOP PORTFOLIO KPI STRIP
+            =================================================== */}
+
             <PortfolioSummary data={portfolio} />
 
-            {/* Tab 1: Main Dashboard (Watchlist Left | Chart Center | AI Council Right) */}
+            {/* ==================================================
+                TAB 1 — MAIN DASHBOARD
+            =================================================== */}
+
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
-                
-                {/* Main 3-Column Real-Time Grid */}
+
+                {/* ------------------------------------------------
+                    Main Dashboard Grid
+
+                    Watchlist LEFT
+                    Portfolio Performance CENTER/RIGHT
+
+                    The old LiveTradingChart has intentionally
+                    been removed from this initial dashboard view.
+                ------------------------------------------------- */}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  
-                  {/* Left Column: Watchlist (3 cols) */}
+
+                  {/* LEFT — WATCHLIST */}
+
                   <div className="lg:col-span-3">
                     <Watchlist
                       selectedSymbol={activeSymbol}
-                      onSelectSymbol={(sym) => setActiveSymbol(sym)}
+                      onSelectSymbol={(symbol) =>
+                        setActiveSymbol(symbol)
+                      }
                     />
                   </div>
 
-                  {/* Center & Right Columns: TradingView Live Chart & AI Council (9 cols) */}
+                  {/* CENTER / RIGHT — PORTFOLIO PERFORMANCE */}
+
                   <div className="lg:col-span-9">
-                    <LiveTradingChart
-                      symbol={activeSymbol}
-                      initialSymbol={activeSymbol}
-                      initialTimeframe="1m"
-                      onSymbolChange={(sym) => setActiveSymbol(sym)}
+                    <PortfolioPerformance />
+                  </div>
+
+                </div>
+
+                {/* ------------------------------------------------
+                    MARKET REGIME + AGENT ACTIVITY
+                ------------------------------------------------- */}
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                  <div className="lg:col-span-1">
+                    <MarketRegimeCard
+                      regime={marketRegime}
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <AgentActivityFeed
+                      events={agentEvents}
                     />
                   </div>
 
                 </div>
 
-                {/* Bottom Row: Market Regime, Activity Stream & Positions */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-1">
-                    <MarketRegimeCard regime={marketRegime} />
-                  </div>
-                  <div className="lg:col-span-2">
-                    <AgentActivityFeed events={agentEvents} />
-                  </div>
-                </div>
+                {/* ------------------------------------------------
+                    STRATEGY LAB
+                ------------------------------------------------- */}
 
-                {/* Strategy Laboratory Section */}
                 <StrategyLab
                   strategies={strategies}
-                  onSelectStrategy={(strat) => setSelectedStrategy(strat)}
+                  onSelectStrategy={(strategy) =>
+                    setSelectedStrategy(strategy)
+                  }
                   onRunDiscovery={handleRunDiscovery}
                   isDiscovering={isDiscovering}
                 />
 
-                {/* Active Positions Table */}
+                {/* ------------------------------------------------
+                    ACTIVE POSITIONS
+                ------------------------------------------------- */}
+
                 <ActivePositionsTable
                   positions={positions}
                   onRefresh={fetchPositions}
-                  onOpenOptimizeModal={handleOpenOptimizeModal}
+                  onOpenOptimizeModal={
+                    handleOpenOptimizeModal
+                  }
                 />
+
               </div>
             )}
 
-            {/* Tab 2: Dedicated Live Trading Chart */}
+            {/* ==================================================
+                TAB 2 — DEDICATED LIVE TRADING CHART
+            =================================================== */}
+
             {activeTab === 'chart' && (
               <div className="space-y-6">
+
                 <LiveTradingChart
                   symbol={activeSymbol}
                   initialSymbol={activeSymbol}
                   initialTimeframe="1m"
-                  onSymbolChange={(sym) => setActiveSymbol(sym)}
+                  onSymbolChange={(symbol) =>
+                    setActiveSymbol(symbol)
+                  }
                 />
+
               </div>
             )}
 
-            {/* Tab 3: Strategy Lab Dedicated */}
+            {/* ==================================================
+                TAB 3 — STRATEGY LAB
+            =================================================== */}
+
             {activeTab === 'strategies' && (
               <StrategyLab
                 strategies={strategies}
-                onSelectStrategy={(strat) => setSelectedStrategy(strat)}
+                onSelectStrategy={(strategy) =>
+                  setSelectedStrategy(strategy)
+                }
                 onRunDiscovery={handleRunDiscovery}
                 isDiscovering={isDiscovering}
               />
             )}
 
-            {/* Tab 4: Trade Explorer */}
+            {/* ==================================================
+                TAB 4 — TRADE EXPLORER
+            =================================================== */}
+
             {activeTab === 'trades' && (
               <TradeExplorer
                 trades={trades}
-                onSelectTrade={(trade) => setSelectedTrade(trade)}
+                onSelectTrade={(trade) =>
+                  setSelectedTrade(trade)
+                }
               />
             )}
 
-            {/* Tab 5: P&L & Analytics */}
-            {activeTab === 'analytics' && <PnLAnalytics />}
+            {/* ==================================================
+                TAB 5 — P&L & ANALYTICS
+            =================================================== */}
 
-            {/* Tab 6: AI Council Visual View */}
-            {activeTab === 'council' && <AICouncilView />}
-
-            {/* Tab 7: Command Center */}
-            {activeTab === 'command' && (
-              <CommandCenter onRunDiscovery={handleRunDiscovery} />
+            {activeTab === 'analytics' && (
+              <PnLAnalytics />
             )}
+
+            {/* ==================================================
+                TAB 6 — AI COUNCIL
+            =================================================== */}
+
+            {activeTab === 'council' && (
+              <AICouncilView />
+            )}
+
+            {/* ==================================================
+                TAB 7 — COMMAND CENTER
+            =================================================== */}
+
+            {activeTab === 'command' && (
+              <CommandCenter
+                onRunDiscovery={handleRunDiscovery}
+              />
+            )}
+
           </>
         )}
+
       </main>
 
-      {/* Modals */}
+      {/* ======================================================
+          MODALS
+      ======================================================= */}
+
       <StrategyDetailModal
         strategy={selectedStrategy}
-        onClose={() => setSelectedStrategy(null)}
+        onClose={() =>
+          setSelectedStrategy(null)
+        }
       />
 
       <ExplainabilityModal
         trade={selectedTrade}
-        onClose={() => setSelectedTrade(null)}
+        onClose={() =>
+          setSelectedTrade(null)
+        }
       />
 
       <AllocationModal
         isOpen={isOptimizeModalOpen}
-        onClose={() => setIsOptimizeModalOpen(false)}
+        onClose={() =>
+          setIsOptimizeModalOpen(false)
+        }
         previewData={allocationPreviewData}
-        onConfirmExecute={handleExecuteAllocation}
+        onConfirmExecute={
+          handleExecuteAllocation
+        }
       />
+
     </div>
   );
 }
+
 export default App;
