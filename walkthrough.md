@@ -1,11 +1,22 @@
-# AAPL Trailing Stop Loss Adjustment ($324.00)
+# Real Parameter Mutation Engine for Command Center
 
-## Summary of Completed Changes
+## Summary of Core Changes
 
-1. **AAPL Trailing Stop Loss Updated to $324.00**:
-   - Updated AAPL stop loss target across execution and rendering components ([`portfolio.py`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/backend/app/alpaca/portfolio.py), [`routes.py`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/backend/app/api/routes.py), [`orchestrator.py`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/backend/app/agents/orchestrator.py), [`ActivePositionsTable.tsx`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/frontend/src/components/ActivePositionsTable.tsx), [`App.tsx`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/frontend/src/App.tsx)) to **`$324.00`**.
+1. **Backend Server Stack Refresh**:
+   - Restarted the backend server instance to execute the new regex-based natural language parser in [`routes.py`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/backend/app/api/routes.py).
 
-2. **Automated Verification**:
-   - **Frontend Production Build**: `npm run build` $\rightarrow$ **0 errors (built in 13.47s)**.
-   - **Backend Test Suite**: `python -m pytest` $\rightarrow$ **10/10 tests passed**.
-   - **Browser Verification**: Confirmed AAPL STOP LOSS column displays **`$324.00`** live in the Active Positions table.
+2. **Real-Time State & Portfolio Overrides**:
+   - Integrated `POSITION_OVERRIDES` mapping in [`portfolio.py`](file:///c:/Users/suman/OneDrive/Desktop/New%20folder%20(2)/backend/app/alpaca/portfolio.py) and `update_position_override()`.
+   - Commands typed into Command Center now immediately modify position targets:
+     - `change take profit of AAPL to 350.13 dollar` $\rightarrow$ Updates AAPL `take_profit_price` to `$350.13`.
+     - `trail stop loss of AAPL to 324 dollar` $\rightarrow$ Updates AAPL `stop_loss_price` to `$324.00`.
+     - `change quantity of AAPL to 76 shares` $\rightarrow$ Updates AAPL `qty` to `76`.
+
+3. **Command Execution Output**:
+   - Command Center displays explicit green confirmation (`✅ Command Executed: Updated AAPL Take Profit target to $350.13.`) along with the formatted JSON data block.
+   - Dashboard **Active Paper Trading Positions** table immediately reflects all updated parameters in real time.
+
+4. **Automated & Visual Verification**:
+   - **Frontend Production Build**: `npm run build` $\rightarrow$ **0 errors (built in 26.26s)**.
+   - **Backend Test Suite**: `python -m pytest` $\rightarrow$ **10/10 PASS**.
+   - **Browser Verification**: Tested `change take profit of AAPL to 350.13 dollar` in Command Center; visually confirmed `$350.13` TAKE PROFIT in Active Positions table.

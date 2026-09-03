@@ -137,17 +137,33 @@ export interface PortfolioSummaryData {
 export interface Position {
   id?: string | number;
   symbol: string;
+  raw_symbol?: string;
+  asset_id?: string;
+  asset_class?: string;
   side: 'BUY' | 'SELL' | 'LONG' | 'SHORT' | 'long' | 'short' | 'buy' | 'sell';
   qty: number;
+  qty_available?: number;
   entry_price: number;
   current_price: number;
   market_value: number;
+  cost_basis?: number;
   unrealized_pnl: number;
   unrealized_pnl_pct: number;
   strategy_id: string;
   risk_score?: number;
-  stop_loss_price?: number;
-  take_profit_price?: number;
+  stop_loss_price?: number | null;
+  stop_loss_order_id?: string | null;
+  stop_loss_type?: string | null;
+  take_profit_price?: number | null;
+  take_profit_order_id?: string | null;
+  take_profit_type?: string | null;
+  trailing_stop?: number | null;
+  trailing_order_id?: string | null;
+  broker?: string;
+  environment?: string;
+  data_source?: string;
+  status?: string;
+  last_synced_at?: string;
 }
 
 export interface SystemStatus {

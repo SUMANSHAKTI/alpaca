@@ -47,21 +47,21 @@ export const TradeExplorer: React.FC<TradeExplorerProps> = ({ trades, onSelectTr
   }, [trades]);
 
   return (
-    <div className="terminal-card p-5 rounded-2xl border border-slate-800 space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 space-y-4">
+      <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
         <div className="flex items-center space-x-2">
-          <Activity className="w-5 h-5 text-cyan-400" />
+          <Activity className="w-5 h-5 text-emerald-400" />
           <h2 className="text-base font-bold text-white font-mono uppercase tracking-wider">
             Auditable Trade Explorer ({trades.length} Executed)
           </h2>
         </div>
-        <span className="text-xs text-slate-400 font-mono">Click any trade for full explainability audit</span>
+        <span className="text-xs text-slate-300 font-mono font-medium">Click any trade for full explainability audit</span>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left font-mono text-xs">
           <thead>
-            <tr className="text-slate-400 border-b border-slate-800 uppercase text-[10px] tracking-wider">
+            <tr className="text-slate-300 border-b border-emerald-500/20 uppercase text-[10px] tracking-wider font-bold">
               <th className="py-2.5 px-3">Timestamp</th>
               <th className="py-2.5 px-3">Symbol</th>
               <th className="py-2.5 px-3">Action</th>
@@ -74,7 +74,7 @@ export const TradeExplorer: React.FC<TradeExplorerProps> = ({ trades, onSelectTr
               <th className="py-2.5 px-3 text-right">Explainability</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-emerald-500/15">
             {trades.map((t) => {
               const cleanSym = t.symbol.toUpperCase().replace(/[\/\-]/g, '');
               const currentPrice = liveQuotes[cleanSym] || t.price;
@@ -87,25 +87,25 @@ export const TradeExplorer: React.FC<TradeExplorerProps> = ({ trades, onSelectTr
                 <tr
                   key={t.id}
                   onClick={() => onSelectTrade(t)}
-                  className="hover:bg-slate-900/80 transition-colors cursor-pointer"
+                  className="hover:bg-emerald-950/40 transition-colors cursor-pointer"
                 >
-                  <td className="py-3 px-3 text-slate-400">{t.timestamp}</td>
+                  <td className="py-3 px-3 text-slate-300 font-medium">{t.timestamp}</td>
                   <td className="py-3 px-3 font-bold text-white">{t.symbol}</td>
                   <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold uppercase">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold uppercase text-[10px]">
                       {t.side}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-right text-slate-200">{t.qty}</td>
-                  <td className="py-3 px-3 text-right text-slate-200">${t.price.toFixed(2)}</td>
-                  <td className="py-3 px-3 text-cyan-400 font-semibold">{t.strategy_name || t.strategy_id}</td>
-                  <td className="py-3 px-3 text-right text-emerald-400 font-bold">{(t.edge_score || 91).toFixed(0)}</td>
-                  <td className="py-3 px-3 text-right text-slate-400">{(t.risk_score || 12).toFixed(0)}</td>
+                  <td className="py-3 px-3 text-right text-white font-bold">{t.qty}</td>
+                  <td className="py-3 px-3 text-right text-white font-bold">${t.price.toFixed(2)}</td>
+                  <td className="py-3 px-3 text-emerald-300 font-bold">{t.strategy_name || t.strategy_id}</td>
+                  <td className="py-3 px-3 text-right text-emerald-400 font-extrabold">{(t.edge_score || 91).toFixed(0)}</td>
+                  <td className="py-3 px-3 text-right text-slate-300 font-medium">{(t.risk_score || 12).toFixed(0)}</td>
                   <td className={`py-3 px-3 text-right font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {isPositive ? '+' : ''}${pnlVal.toFixed(2)} ({isPositive ? '+' : ''}{pnlPct.toFixed(2)}%)
                   </td>
                   <td className="py-3 px-3 text-right">
-                    <span className="text-cyan-400 font-bold flex items-center justify-end space-x-1 hover:underline">
+                    <span className="text-emerald-400 font-extrabold flex items-center justify-end space-x-1 hover:underline">
                       <span>WHY THIS TRADE?</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>

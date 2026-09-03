@@ -87,38 +87,6 @@ class AgentOrchestrator:
             }
         ]
         
-        self.positions = [
-            {
-                "id": "POS-NVDA",
-                "symbol": "NVDA",
-                "qty": 250,
-                "entry_price": 122.40,
-                "current_price": 128.50,
-                "market_value": 32125.00,
-                "unrealized_pnl": 1525.00,
-                "unrealized_pnl_pct": 0.0498,
-                "side": "long",
-                "strategy_id": "STRAT-REG-001",
-                "stop_loss_price": 118.10,
-                "risk_score": 12.0
-            },
-            {
-                "id": "POS-AAPL",
-                "symbol": "AAPL",
-                "qty": 76,
-                "entry_price": 316.03,
-                "current_price": 326.19,
-                "market_value": 24790.44,
-                "unrealized_pnl": 772.16,
-                "unrealized_pnl_pct": 0.0321,
-                "side": "long",
-                "strategy_id": "STRAT-ERN-002",
-                "stop_loss_price": 324.00,
-                "take_profit_price": 339.73,
-                "risk_score": 10.0
-            }
-        ]
-        
         self.trades = [
             {
                 "id": "TRD-1092",
@@ -155,6 +123,10 @@ class AgentOrchestrator:
             "symbol": symbol
         }
         self.agent_events.insert(0, event)
+
+    @property
+    def positions(self) -> List[Dict[str, Any]]:
+        return portfolio_service.get_positions()
 
     def run_discovery_cycle(self) -> Dict[str, Any]:
         """
@@ -537,6 +509,92 @@ class AgentOrchestrator:
                         )
                         
         return {"success": True, "executed_orders": executed_orders, "audit_count": len(self.audit_log)}
+
+    def run_autonomous_scan(self) -> Dict[str, Any]:
+        """
+        Autonomous AI Trading Scientist Execution Engine.
+        Scans real-time candidate universe (AAPL, NVDA, SPY, BTC/USD, MSFT, AMD, QQQ, TSLA),
+        evaluates active strategies, applies Adaptive Capital Allocator scores & risk limits,
+        and automatically executes paper trades on Alpaca when signals exceed edge threshold (Score > 75).
+        """
+        if not getattr(self, "autonomous_active", True):
+            return {"status": "paused", "auto_executed": False}
+
+        self.scan_count = getattr(self, "scan_count", 0) + 1
+        import datetime
+
+        # 1. Fetch current quotes & watchlist
+        symbols = ["AAPL", "NVDA", "SPY", "BTC/USD", "MSFT", "AMD", "QQQ", "TSLA"]
+        quotes = market_data_service.get_watchlist_quotes(symbols)
+
+        # 2. Run Adaptive Capital Allocation Engine preview
+        account = portfolio_service.get_account()
+        positions = portfolio_service.get_positions() or self.positions
+        optimization = adaptive_allocator.optimize_portfolio(positions, account, quotes, self.strategies)
+
+        # 3. Identify opportunities & auto-execute paper trade if high edge score signal found
+        auto_executed = False
+        execution_detail = None
+
+        recommendations = optimization.get("recommendations", [])
+        for rec in recommendations:
+            action = rec.get("action", "HOLD")
+            score = rec.get("score", 0)
+            symbol = rec.get("symbol", "")
+            
+            # High edge buy signal trigger
+            if action.startswith("BUY") and score >= 75 and symbol not in [p.get("symbol") for p in positions if p.get("qty", 0) > 100]:
+                target_qty = rec.get("target_qty", 5)
+                add_qty = max(1, target_qty - rec.get("current_qty", 0))
+                price = rec.get("current_price", 100.0)
+                
+                # Check deterministic risk limits
+                risk_res = risk_agent.validate_trade_proposal(
+                    symbol, add_qty, price, "buy", self.strategies[0], account
+                )
+                
+                if risk_res.get("approved"):
+                    order_res = trading_service.submit_order(symbol, add_qty, "buy", "market", self.strategies[0]["strategy_id"])
+                    auto_executed = True
+                    execution_detail = {
+                        "symbol": symbol,
+                        "qty": add_qty,
+                        "price": price,
+                        "order": order_res,
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    
+                    # Log event
+                    self._add_event(
+                        "Autonomous AI Trader",
+                        "AUTO_TRADE_EXECUTE",
+                        f"Autonomous AI independently executed BUY order for {add_qty} {symbol} @ ${price:.2f} (Edge Score: {score:.0f}/100, Risk Approved).",
+                        self.strategies[0]["strategy_id"],
+                        symbol
+                    )
+                    
+                    self.audit_log.append({
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "symbol": symbol,
+                        "asset_class": rec.get("asset_class", "EQUITY"),
+                        "current_qty": rec.get("current_qty", 0),
+                        "target_qty": target_qty,
+                        "action": f"AUTONOMOUS BUY ({add_qty})",
+                        "reason": f"Independent AI execution based on Edge Score ({score:.0f}/100) and Bullish regime."
+                    })
+                    break
+
+        return {
+            "status": "active",
+            "scan_count": self.scan_count,
+            "auto_executed": auto_executed,
+            "execution_detail": execution_detail,
+            "optimization_summary": {
+                "portfolio_value": optimization.get("portfolio_value"),
+                "buying_power": optimization.get("buying_power"),
+                "risk_level": optimization.get("expected_portfolio_risk_pct")
+            }
+        }
 
     def get_audit_log(self) -> List[Dict[str, Any]]:
         return self.audit_log

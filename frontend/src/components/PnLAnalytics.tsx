@@ -19,8 +19,8 @@ export const PnLAnalytics: React.FC = () => {
   const [cumulativeReturn, setCumulativeReturn] = useState<number>(12.45);
   const [strategyContrib, setStrategyContrib] = useState<any[]>([
     { name: 'Regime Momentum v3', value: 6800, color: '#34D399' },
-    { name: 'Earnings Momentum', value: 4200, color: '#38BDF8' },
-    { name: 'Mean Reversion', value: 1450, color: '#FBBF24' }
+    { name: 'Earnings Momentum', value: 4200, color: '#10B981' },
+    { name: 'Mean Reversion', value: 1450, color: '#059669' }
   ]);
 
   const [riskMetrics, setRiskMetrics] = useState<any>({
@@ -66,22 +66,22 @@ export const PnLAnalytics: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Controls */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
         <div>
           <h2 className="text-base font-bold text-white font-mono flex items-center space-x-2">
-            <BarChart3 className="w-5 h-5 text-cyan-400" />
+            <BarChart3 className="w-5 h-5 text-emerald-400" />
             <span>P&L & Quantitative Portfolio Analytics</span>
           </h2>
-          <p className="text-xs text-slate-400">Auditable risk-adjusted return breakdown from Alpaca Paper Account</p>
+          <p className="text-xs text-slate-300 font-medium">Auditable risk-adjusted return breakdown from Alpaca Paper Account</p>
         </div>
 
-        <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 font-mono text-xs">
+        <div className="flex items-center space-x-1 bg-black/80 p-1 rounded-lg border border-emerald-500/30 font-mono text-xs">
           {(['1D', '1W', '1M', 'ALL'] as const).map((tf) => (
             <button
               key={tf}
               onClick={() => setTimeframe(tf)}
-              className={`px-3 py-1 rounded transition-all ${
-                timeframe === tf ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 rounded transition-all font-bold cursor-pointer ${
+                timeframe === tf ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/50' : 'text-slate-300 hover:text-white hover:bg-emerald-950/40'
               }`}
             >
               {tf}
@@ -91,9 +91,9 @@ export const PnLAnalytics: React.FC = () => {
       </div>
 
       {/* Main Cumulative Equity Curve */}
-      <div className="terminal-card p-5 rounded-2xl border border-slate-800 space-y-4">
+      <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-200 font-bold">
             Cumulative Portfolio Equity ($)
           </span>
           <span className={`text-xs font-mono font-bold flex items-center gap-1 ${
@@ -109,18 +109,18 @@ export const PnLAnalytics: React.FC = () => {
             <AreaChart data={equityData}>
               <defs>
                 <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22D3EE" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#22D3EE" stopOpacity={0.0} />
+                  <stop offset="5%" stopColor="#34D399" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#34D399" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-              <XAxis dataKey="date" stroke="#64748B" tick={{ fontSize: 11 }} />
-              <YAxis stroke="#64748B" tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#064E3B" strokeOpacity={0.3} />
+              <XAxis dataKey="date" stroke="#94A3B8" tick={{ fontSize: 11, fill: '#E2E8F0' }} />
+              <YAxis stroke="#94A3B8" tick={{ fontSize: 11, fill: '#E2E8F0' }} domain={['auto', 'auto']} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155' }}
+                contentStyle={{ backgroundColor: '#030704', borderColor: '#10B981', color: '#FFFFFF' }}
                 formatter={(val: any) => [`$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 'Portfolio Equity']}
               />
-              <Area type="monotone" dataKey="equity" stroke="#22D3EE" strokeWidth={2.5} fillOpacity={1} fill="url(#equityGrad)" />
+              <Area type="monotone" dataKey="equity" stroke="#34D399" strokeWidth={2.5} fillOpacity={1} fill="url(#equityGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -128,17 +128,17 @@ export const PnLAnalytics: React.FC = () => {
 
       {/* Strategy Contribution & Drawdown Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="terminal-card p-5 rounded-2xl border border-slate-800 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold block">
+        <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 space-y-3">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-200 font-bold block">
             Strategy P&L Contribution ($)
           </span>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={strategyContrib}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                <XAxis dataKey="name" stroke="#64748B" tick={{ fontSize: 10 }} />
-                <YAxis stroke="#64748B" tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#064E3B" strokeOpacity={0.3} />
+                <XAxis dataKey="name" stroke="#94A3B8" tick={{ fontSize: 10, fill: '#E2E8F0' }} />
+                <YAxis stroke="#94A3B8" tick={{ fontSize: 11, fill: '#E2E8F0' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#030704', borderColor: '#10B981', color: '#FFFFFF' }} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {strategyContrib.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color || '#34D399'} />
@@ -149,27 +149,27 @@ export const PnLAnalytics: React.FC = () => {
           </div>
         </div>
 
-        <div className="terminal-card p-5 rounded-2xl border border-slate-800 space-y-4">
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold block">
+        <div className="glass-card p-5 rounded-2xl border border-emerald-500/30 space-y-4">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-200 font-bold block">
             Risk & Drawdown Profile
           </span>
 
           <div className="space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400">Max Portfolio Drawdown:</span>
-              <span className="text-amber-400 font-bold">{riskMetrics.max_drawdown}% (Target &lt; 15%)</span>
+            <div className="flex items-center justify-between p-3 rounded bg-black/80 border border-emerald-500/30">
+              <span className="text-slate-300 font-medium">Max Portfolio Drawdown:</span>
+              <span className="text-amber-300 font-bold">{riskMetrics.max_drawdown}% (Target &lt; 15%)</span>
             </div>
-            <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400">Annualized Sharpe Ratio:</span>
-              <span className="text-emerald-400 font-bold">{riskMetrics.sharpe_ratio}</span>
+            <div className="flex items-center justify-between p-3 rounded bg-black/80 border border-emerald-500/30">
+              <span className="text-slate-300 font-medium">Annualized Sharpe Ratio:</span>
+              <span className="text-emerald-400 font-extrabold">{riskMetrics.sharpe_ratio}</span>
             </div>
-            <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400">Sortino Ratio:</span>
-              <span className="text-emerald-400 font-bold">{riskMetrics.sortino_ratio}</span>
+            <div className="flex items-center justify-between p-3 rounded bg-black/80 border border-emerald-500/30">
+              <span className="text-slate-300 font-medium">Sortino Ratio:</span>
+              <span className="text-emerald-400 font-extrabold">{riskMetrics.sortino_ratio}</span>
             </div>
-            <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800">
-              <span className="text-slate-400">Overall Win Rate:</span>
-              <span className="text-cyan-400 font-bold">{riskMetrics.win_rate}%</span>
+            <div className="flex items-center justify-between p-3 rounded bg-black/80 border border-emerald-500/30">
+              <span className="text-slate-300 font-medium">Overall Win Rate:</span>
+              <span className="text-emerald-300 font-extrabold">{riskMetrics.win_rate}%</span>
             </div>
           </div>
         </div>

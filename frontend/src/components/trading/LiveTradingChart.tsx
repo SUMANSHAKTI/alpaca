@@ -104,21 +104,21 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { color: '#0B0E14' },
-        textColor: '#94A3B8'
+        background: { color: '#030704' },
+        textColor: '#CBD5E1'
       },
       grid: {
-        vertLines: { color: '#1E293B' },
-        horzLines: { color: '#1E293B' }
+        vertLines: { color: 'rgba(6, 78, 59, 0.25)' },
+        horzLines: { color: 'rgba(6, 78, 59, 0.25)' }
       },
       crosshair: {
         mode: 1
       },
       rightPriceScale: {
-        borderColor: '#334155'
+        borderColor: 'rgba(52, 211, 153, 0.3)'
       },
       timeScale: {
-        borderColor: '#334155',
+        borderColor: 'rgba(52, 211, 153, 0.3)',
         timeVisible: true,
         secondsVisible: false
       }
@@ -126,12 +126,12 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
 
     // Add Candlestick Series
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#10B981',
-      downColor: '#EF4444',
-      borderUpColor: '#10B981',
-      borderDownColor: '#EF4444',
-      wickUpColor: '#10B981',
-      wickDownColor: '#EF4444'
+      upColor: '#34D399',
+      downColor: '#F43F5E',
+      borderUpColor: '#34D399',
+      borderDownColor: '#F43F5E',
+      wickUpColor: '#34D399',
+      wickDownColor: '#F43F5E'
     });
 
     // Add Volume Histogram Series
@@ -430,10 +430,10 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
     }`}>
       
       {/* Primary Chart Box */}
-      <div className="flex-1 flex flex-col bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+      <div className="flex-1 flex flex-col glass-card bg-black/85 border border-emerald-500/30 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
         
         {/* Top Control & Status Bar */}
-        <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="p-3 bg-black/90 border-b border-emerald-500/20 flex flex-wrap items-center justify-between gap-2.5">
           
           {/* Main Control Group */}
           <div className="flex flex-wrap items-center gap-2">
@@ -442,25 +442,25 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
             <select
               value={symbol}
               onChange={(e) => handleSymbolSelect(e.target.value)}
-              className="bg-slate-800 border border-slate-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+              className="bg-black/90 border border-emerald-500/40 text-white text-xs font-bold py-1.5 px-3 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer font-mono"
             >
               {SUPPORTED_SYMBOLS.map((s) => (
-                <option key={s} value={s}>
+                <option key={s} value={s} className="bg-black text-white">
                   {s}
                 </option>
               ))}
             </select>
 
             {/* Timeframe Buttons */}
-            <div className="flex items-center bg-slate-800/80 p-0.5 rounded-lg border border-slate-700/60 overflow-x-auto">
+            <div className="flex items-center bg-black/80 p-0.5 rounded-lg border border-emerald-500/30 overflow-x-auto font-mono">
               {SUPPORTED_TIMEFRAMES.map((tf) => (
                 <button
                   key={tf}
                   onClick={() => setTimeframe(tf)}
-                  className={`px-2 py-1 text-[11px] font-bold rounded-md transition-all ${
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                     timeframe === tf
-                      ? 'bg-cyan-500 text-slate-950 shadow-md'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                      ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20 font-extrabold'
+                      : 'text-slate-300 hover:text-white hover:bg-emerald-950/40'
                   }`}
                 >
                   {tf}
@@ -469,22 +469,22 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
             </div>
 
             {/* Regime Badge */}
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 font-bold text-xs">
-              <Activity className="w-3.5 h-3.5 animate-pulse" />
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/40 rounded-lg text-emerald-300 font-bold text-xs font-mono">
+              <Activity className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
               <span>{regime.regime} — {Math.round(regime.confidence * 100)}%</span>
             </div>
           </div>
 
           {/* Right Action Group */}
-          <div className="flex items-center space-x-2 text-xs">
+          <div className="flex items-center space-x-2 text-xs font-mono">
             
             {/* Demo Mode Toggle */}
             <button
               onClick={() => setDemoMode(!demoMode)}
-              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors flex items-center gap-1 cursor-pointer ${
                 demoMode
                   ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                  : 'bg-black/80 text-slate-200 border-emerald-500/30 hover:border-emerald-400 hover:text-white'
               }`}
             >
               {demoMode ? 'DEMO MODE — SIMULATED' : 'LIVE ALPACA API'}
@@ -493,7 +493,7 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
             {/* Fullscreen Button */}
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors"
+              className="p-1.5 bg-black/80 border border-emerald-500/30 hover:border-emerald-400 text-slate-200 hover:text-white rounded-lg transition-colors cursor-pointer"
               title="Toggle Fullscreen"
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -503,48 +503,48 @@ export const LiveTradingChart: React.FC<LiveTradingChartProps> = ({
         </div>
 
         {/* Overlay Options Toggles Toolbar */}
-        <div className="px-3.5 py-1.5 bg-slate-950/40 border-b border-slate-800/80 flex flex-wrap items-center gap-4 text-[11px] text-slate-400 font-medium">
-          <span className="text-slate-500 font-semibold uppercase tracking-wider">Overlays:</span>
+        <div className="px-3.5 py-1.5 bg-black/70 border-b border-emerald-500/15 flex flex-wrap items-center gap-4 text-[11px] text-slate-300 font-medium font-mono">
+          <span className="text-slate-400 font-bold uppercase tracking-wider">Overlays:</span>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showMA} onChange={(e) => setShowMA(e.target.checked)} className="rounded accent-cyan-500" />
-            <span className="text-amber-400 font-semibold">SMA 20</span>
+            <input type="checkbox" checked={showMA} onChange={(e) => setShowMA(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-amber-300 font-bold">SMA 20</span>
           </label>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showEMA} onChange={(e) => setShowEMA(e.target.checked)} className="rounded accent-cyan-500" />
-            <span className="text-purple-400 font-semibold">EMA 50</span>
+            <input type="checkbox" checked={showEMA} onChange={(e) => setShowEMA(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-purple-300 font-bold">EMA 50</span>
           </label>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showVolume} onChange={(e) => setShowVolume(e.target.checked)} className="rounded accent-cyan-500" />
-            <span>Volume</span>
+            <input type="checkbox" checked={showVolume} onChange={(e) => setShowVolume(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-slate-200 font-bold">Volume</span>
           </label>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showAIMarkers} onChange={(e) => setShowAIMarkers(e.target.checked)} className="rounded accent-cyan-500" />
-            <span className="text-emerald-400 font-semibold">AI Signals</span>
+            <input type="checkbox" checked={showAIMarkers} onChange={(e) => setShowAIMarkers(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-emerald-400 font-bold">AI Signals</span>
           </label>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showStopLoss} onChange={(e) => setShowStopLoss(e.target.checked)} className="rounded accent-cyan-500" />
-            <span className="text-rose-400 font-semibold">Stop Loss</span>
+            <input type="checkbox" checked={showStopLoss} onChange={(e) => setShowStopLoss(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-rose-400 font-bold">Stop Loss</span>
           </label>
 
           <label className="flex items-center gap-1.5 cursor-pointer hover:text-white">
-            <input type="checkbox" checked={showTakeProfit} onChange={(e) => setShowTakeProfit(e.target.checked)} className="rounded accent-cyan-500" />
-            <span className="text-emerald-400 font-semibold">Take Profit</span>
+            <input type="checkbox" checked={showTakeProfit} onChange={(e) => setShowTakeProfit(e.target.checked)} className="rounded accent-emerald-500" />
+            <span className="text-emerald-400 font-bold">Take Profit</span>
           </label>
         </div>
 
         {/* Lightweight Charts Canvas Render Container */}
-        <div ref={chartContainerRef} className="w-full flex-1 min-h-[420px] bg-slate-950" />
+        <div ref={chartContainerRef} className="w-full flex-1 min-h-[420px] bg-[#030704]" />
 
         {/* Bottom Chart Footer */}
-        <div className="px-4 py-2 bg-slate-950/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+        <div className="px-4 py-2 bg-black/90 border-t border-emerald-500/20 flex items-center justify-between text-xs text-slate-300 font-mono">
           <span className="flex items-center gap-1">
-            <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
-            Source: <strong className="text-slate-300">ALPACA MARKET DATA (IEX Feed)</strong>
+            <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
+            Source: <strong className="text-white">ALPACA MARKET DATA (IEX Feed)</strong>
           </span>
           <span>Environment: <strong className="text-emerald-400">PAPER TRADING</strong></span>
         </div>

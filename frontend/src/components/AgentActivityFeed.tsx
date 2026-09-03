@@ -8,24 +8,24 @@ interface AgentActivityFeedProps {
 
 export const AgentActivityFeed: React.FC<AgentActivityFeedProps> = ({ events }) => {
   const getAgentIcon = (agent: string) => {
-    if (agent.includes('Market Intelligence')) return <Compass className="w-3.5 h-3.5 text-purple-400" />;
-    if (agent.includes('Discovery')) return <Sparkles className="w-3.5 h-3.5 text-cyan-400" />;
-    if (agent.includes('Backtest')) return <BarChart2 className="w-3.5 h-3.5 text-blue-400" />;
+    if (agent.includes('Market Intelligence')) return <Compass className="w-3.5 h-3.5 text-emerald-300" />;
+    if (agent.includes('Discovery')) return <Sparkles className="w-3.5 h-3.5 text-emerald-400" />;
+    if (agent.includes('Backtest')) return <BarChart2 className="w-3.5 h-3.5 text-emerald-300" />;
     if (agent.includes('Adversary')) return <Shield className="w-3.5 h-3.5 text-rose-400" />;
     if (agent.includes('Risk')) return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
-    return <Cpu className="w-3.5 h-3.5 text-amber-400" />;
+    return <Cpu className="w-3.5 h-3.5 text-amber-300" />;
   };
 
   return (
-    <div className="terminal-card p-5 rounded-xl border border-slate-800 space-y-4 flex flex-col h-full">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div className="glass-card p-5 rounded-xl border border-emerald-500/30 space-y-4 flex flex-col h-full">
+      <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
         <div className="flex items-center space-x-2">
-          <Activity className="w-5 h-5 text-cyan-400" />
+          <Activity className="w-5 h-5 text-emerald-400" />
           <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
             Autonomous Agent Activity Stream
           </h3>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
           LIVE FEED
         </span>
       </div>
@@ -34,26 +34,26 @@ export const AgentActivityFeed: React.FC<AgentActivityFeedProps> = ({ events }) 
         {events.map((evt) => (
           <div
             key={evt.id}
-            className="p-3 rounded-lg bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition-all font-mono text-xs space-y-1"
+            className="p-3 rounded-lg bg-black/70 border border-emerald-500/25 hover:border-emerald-500/50 transition-all font-mono text-xs space-y-1"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {getAgentIcon(evt.agent_name)}
-                <span className="font-bold text-slate-200">{evt.agent_name}</span>
+                <span className="font-bold text-white">{evt.agent_name}</span>
               </div>
-              <span className="text-[10px] text-slate-400">{evt.timestamp}</span>
+              <span className="text-[10px] text-slate-300 font-medium">{evt.timestamp}</span>
             </div>
 
-            <div className="text-cyan-400 text-[11px] font-semibold">
+            <div className="text-emerald-400 text-[11px] font-bold">
               Action: {evt.action}
             </div>
 
-            <p className="text-slate-300 text-[11px] leading-relaxed">
+            <p className="text-slate-200 text-[11px] leading-relaxed font-medium">
               {evt.details}
             </p>
 
             {evt.strategy_id && (
-              <span className="inline-block text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded mt-1">
+              <span className="inline-block text-[10px] text-slate-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded mt-1 font-semibold">
                 Ref: {evt.strategy_id}
               </span>
             )}

@@ -77,15 +77,15 @@ export const Watchlist: React.FC<WatchlistProps> = ({ selectedSymbol, onSelectSy
   };
 
   return (
-    <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl backdrop-blur-md text-slate-100">
+    <div className="w-full glass-card bg-black/85 border border-emerald-500/30 rounded-2xl p-4 space-y-4 shadow-xl backdrop-blur-md text-slate-100">
       
       {/* Watchlist Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="flex items-center justify-between pb-3 border-b border-emerald-500/20">
         <div className="flex items-center space-x-2">
-          <Activity className="w-4 h-4 text-cyan-400" />
+          <Activity className="w-4 h-4 text-emerald-400" />
           <h3 className="font-bold text-sm uppercase tracking-wider text-white">Live Watchlist</h3>
         </div>
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
           ALPACA MARKET FEED
         </span>
       </div>
@@ -93,18 +93,18 @@ export const Watchlist: React.FC<WatchlistProps> = ({ selectedSymbol, onSelectSy
       {/* Add Symbol Form */}
       <form onSubmit={handleAddSymbol} className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Add symbol (e.g. AMD)..."
             value={newSymbol}
             onChange={e => setNewSymbol(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-xs pl-8 pr-3 py-1.5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="w-full bg-black/80 border border-emerald-500/30 text-xs pl-8 pr-3 py-1.5 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono"
           />
         </div>
         <button
           type="submit"
-          className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg transition-colors flex items-center gap-1"
+          className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-lg transition-colors flex items-center gap-1 cursor-pointer shadow-md shadow-emerald-500/20"
         >
           <Plus className="w-3.5 h-3.5" />
           Add
@@ -123,27 +123,27 @@ export const Watchlist: React.FC<WatchlistProps> = ({ selectedSymbol, onSelectSy
               onClick={() => onSelectSymbol(item.symbol)}
               className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
                 isSelected
-                  ? 'bg-cyan-500/10 border-cyan-500/40 text-white shadow-md'
-                  : 'bg-slate-800/40 border-slate-800 hover:bg-slate-800/80 hover:border-slate-700'
+                  ? 'bg-emerald-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10'
+                  : 'bg-black/60 border-emerald-500/20 hover:bg-emerald-950/40 hover:border-emerald-500/40'
               }`}
             >
               {/* Left: Symbol Name & Volume */}
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-sm text-white tracking-tight">{item.symbol}</span>
+                  <span className="font-extrabold text-sm text-white tracking-tight font-mono">{item.symbol}</span>
                   {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   )}
                 </div>
-                <span className="text-[10px] text-slate-500 block">
+                <span className="text-[10px] text-slate-300 font-medium block">
                   Vol: {(item.volume / 1000000).toFixed(2)}M
                 </span>
               </div>
 
               {/* Right: Price & Daily Change */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 font-mono">
                 <div className="text-right">
-                  <span className="font-bold text-xs block text-slate-100">
+                  <span className="font-bold text-xs block text-white">
                     ${item.price > 0 ? item.price.toFixed(2) : '--.--'}
                   </span>
                   <div className={`flex items-center justify-end gap-0.5 text-[10px] font-bold ${
@@ -156,7 +156,7 @@ export const Watchlist: React.FC<WatchlistProps> = ({ selectedSymbol, onSelectSy
 
                 <button
                   onClick={e => handleRemoveSymbol(item.symbol, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-400 transition-opacity"
                   title="Remove from watchlist"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
