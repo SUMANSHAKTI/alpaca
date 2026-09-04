@@ -117,21 +117,3 @@ python -m pytest tests
 ```bash
 docker-compose up --build
 ```
-
----
-
-## 7. 3–5 Minute Hackathon Demo Flow
-
-Launch the dashboard at `http://localhost:3000` and click the **Hackathon Demo** tab or the interactive demo controller:
-
-1. **STEP 1**: Open Dashboard — Show Paper Portfolio, P&L, Market Regime (`BULLISH` 85%), and Active Strategies.
-2. **STEP 2**: Click **"Discover Strategy"** — Show Discovery Agent generating hypothesis `Regime Momentum v3`.
-3. **STEP 3**: Run Backtest — Show Chronological Train vs Out-of-Sample (OOS) Walk-Forward results (OOS Sharpe: 1.42).
-4. **STEP 4**: Run Adversary Agent — Show Adversary stress-testing strategies and rejecting flawed baseline `RSI Extreme Reversal` (Score: 31/100 🔴 REJECTED).
-5. **STEP 5**: Edge Score Darwinism — Show `Regime Momentum v3` receiving Edge Score 91/100 and state set to `ALIVE` 🟢.
-6. **STEP 6**: Portfolio Manager — Show 30% capital ($30,000) allocated to `Regime Momentum v3`.
-7. **STEP 7**: Deterministic Risk Agent — Show Python safety layer evaluating 10 hard rules and approving trade.
-8. **STEP 8**: Alpaca Paper Trade — Submit order for 70 shares of `NVDA` @ $122.40.
-9. **STEP 9**: Portfolio Update — Order filled; active position rendered in real-time portfolio.
-10. **STEP 10**: Edge Deterioration Simulation — Simulate market regime change; Edge Score drops 91 → 58, allocation automatically decreases to 12%.
-11. **STEP 11**: Explainability Audit — Ask Command Center *"Why did you reduce allocation?"* or click **"WHY THIS TRADE?"** for full evidence breakdown.
